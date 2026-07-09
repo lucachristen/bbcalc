@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bLink Sync Cost Calculator</title>
+  <meta name="description" content="Estimate SIX bLink bank-sync costs: pick a bank, sync frequency, accounts and expected transactions." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>bLink Sync Cost Calculator</h1>
+      <p class="tagline">Estimate what it costs to keep a customer's bank accounts in sync over SIX&nbsp;bLink.</p>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <!-- ───────────── Inputs ───────────── -->
+    <section class="card inputs" aria-label="Configuration">
+      <div class="field">
+        <label for="bank">Bank</label>
+        <select id="bank"></select>
+        <p class="field-note" id="bank-note"></p>
+      </div>
+
+      <div class="field">
+        <span class="label">Sync frequency</span>
+        <div class="segmented" id="frequency" role="radiogroup" aria-label="Sync frequency"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <span class="label">Accounts &amp; expected transactions</span>
+          <button type="button" class="btn-add" id="add-account">+ Add account</button>
+        </div>
+        <p class="field-note">Transactions expected per account over the initial load window (used only for the one-time backfill).</p>
+        <div id="accounts" class="accounts"></div>
+      </div>
+
+      <div class="field">
+        <label for="history">How far back to load data initially</label>
+        <select id="history">
+          <option value="1">1 month</option>
+          <option value="3" selected>3 months</option>
+          <option value="6">6 months</option>
+          <option value="12">12 months</option>
+        </select>
+      </div>
+
+      <label class="switch">
+        <input type="checkbox" id="balance-history" checked />
+        <span>Load balance history on initial load</span>
+      </label>
+      <p class="field-note">Balances have no list API and no pagination — one call per day per account. This is the single biggest cost driver.</p>
+
+      <details class="advanced">
+        <summary>Advanced assumptions</summary>
+        <div class="field inline">
+          <label for="page-size">Transaction page size (TXs per call)</label>
+          <input type="number" id="page-size" min="1" step="1" value="25" />
+        </div>
+        <div class="field inline">
+          <label for="balance-days">Balance days per month</label>
+          <input type="number" id="balance-days" min="1" step="0.5" value="30.5" />
+        </div>
+      </details>
+    </section>
+
+    <!-- ───────────── Results ───────────── -->
+    <section class="card results" aria-live="polite" aria-label="Estimated cost">
+      <div class="headline">
+        <div class="headline-item primary">
+          <span class="headline-label">Ongoing / month</span>
+          <span class="headline-value" id="out-monthly">–</span>
+        </div>
+        <div class="headline-item">
+          <span class="headline-label">One-time setup</span>
+          <span class="headline-value" id="out-onetime">–</span>
+        </div>
+        <div class="headline-item">
+          <span class="headline-label">First year total</span>
+          <span class="headline-value" id="out-year">–</span>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <h2>Recurring &mdash; per month</h2>
+        <table>
+          <tbody id="bd-recurring"></tbody>
+          <tfoot>
+            <tr class="total-row">
+              <th scope="row">Total per month</th>
+              <td id="bd-recurring-calls"></td>
+              <td id="bd-recurring-cost"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="breakdown">
+        <h2>Initial load &mdash; one-time</h2>
+        <table>
+          <tbody id="bd-initial"></tbody>
+          <tfoot>
+            <tr class="total-row">
+              <th scope="row">Total one-time</th>
+              <td id="bd-initial-calls"></td>
+              <td id="bd-initial-cost"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <p class="disclaimer">
+        Estimate only. All prices in CHF, excl. VAT. Based on SIX bLink price list Annex&nbsp;4
+        (AIS per-call prices &amp; customer-registration fees) and the documented call-count
+        assumptions below. SIX platform participation and onboarding fees are not included —
+        they are fixed and independent of the number of users.
+      </p>
+    </section>
+  </main>
+
+  <!-- ───────────── Methodology (transparency) ───────────── -->
+  <section class="wrap methodology">
+    <h2>How we calculate</h2>
+    <div class="method-grid">
+      <div class="card method">
+        <h3>Recurring calls (per sync run)</h3>
+        <ul>
+          <li><strong>1</strong> call for the account list (once per run)</li>
+          <li><strong>1</strong> call per account for balances</li>
+          <li><strong>1</strong> call per account for new transactions<br /><span class="muted">(assumes one call fetches all new TXs)</span></li>
+        </ul>
+        <p class="muted">4× per day = 1 end-of-day + 3 intraday. Month = 31 days / 4 weeks.</p>
+      </div>
+      <div class="card method">
+        <h3>Initial load (one-time)</h3>
+        <ul>
+          <li><strong>1</strong> call for the account list</li>
+          <li><strong>1</strong> balance call per day per account over the load window <span class="muted">(no pagination)</span></li>
+          <li><strong>⌈TX ÷ page size⌉</strong> transaction calls per account</li>
+          <li>the bank's one-time customer registration fee</li>
+        </ul>
+      </div>
+      <div class="card method">
+        <h3>Pricing source</h3>
+        <ul>
+          <li>Per-call price = bank's <strong>AIS</strong> rate (Annex 4 §8.3)</li>
+          <li>Registration = Annex 4 §8.2</li>
+          <li>Banks not in the price list charge <strong>CHF 0</strong></li>
+        </ul>
+        <p class="muted">SIX retains 20% of these prices from the provider; the Service User still pays the full list price shown here.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Internal estimation tool · Prices per SIX bLink Platform Price List (Annex&nbsp;4, D0554.EN.13).</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="calc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+/*
+ * Pure pricing engine for the bLink bank-sync cost calculator.
+ *
+ * Cost model (derived from the SIX bLink price list, Annex 4, and the internal
+ * pricing discussion). Every call below is an AIS (Account Information Service) call
+ * and is billed at the bank's per-call price.
+ *
+ * ── One-time (initial load) ──────────────────────────────────────────────
+ *   registration   : the bank's one-time customer registration fee (once per user)
+ *   account list    : 1 call
+ *   balance history : 1 call per day per account over the load window
+ *                     (no list API, no pagination) — optional, big cost driver
+ *   transaction     : ceil(expectedTx / pageSize) calls per account (backfill)
+ *   backfill
+ *
+ * ── Recurring (monthly) ──────────────────────────────────────────────────
+ *   account list : 1 call per account-list run
+ *   balances     : N calls per sync run          (N = number of accounts)
+ *   transactions : N calls per sync run          (1 call fetches all new TXs)
+ *
+ * Reference check (bank @ CHF 0.10, 3 accounts of 120/40/20 TX, 3-month history,
+ * balance history on):
+ *   initial load  = 1 + 92*3 + (5+2+1)          = 285 calls
+ *   4x/day monthly = (31 + 124*3 + 124*3) * 0.10 = CHF 77.50
+ *   1x/day monthly = (31 +  31*3 +  31*3) * 0.10 = CHF 21.70
+ *   1x/week monthly = (4 +   4*3 +   4*3) * 0.10 = CHF  2.80
+ */
+
+function computePricing(input) {
+  const {
+    bank,                 // { aisPerCall, registration }
+    frequency,            // { accountListRunsPerMonth, syncRunsPerMonth }
+    accounts,             // number[]  expected TX per account over the load window
+    historyMonths,        // how far back to load data initially
+    loadBalanceHistory,   // boolean
+    balanceDaysPerMonth,  // days of balance history per month (~30.5)
+    txPageSize,           // TXs per call during backfill
+  } = input;
+
+  const price = bank.aisPerCall;
+  const N = accounts.length;
+
+  // ── Recurring (per month) ──────────────────────────────────────────────
+  const rAccountList = frequency.accountListRunsPerMonth;      // 1 call per run
+  const rBalances    = frequency.syncRunsPerMonth * N;         // N calls per run
+  const rTransactions = frequency.syncRunsPerMonth * N;        // N calls per run
+  const recurringCalls = rAccountList + rBalances + rTransactions;
+  const recurringCost = recurringCalls * price;
+
+  // ── One-time (initial load) ────────────────────────────────────────────
+  const historyDays = Math.round(historyMonths * balanceDaysPerMonth);
+  const iAccountList = 1;
+  const iBalances = loadBalanceHistory ? historyDays * N : 0;
+  const iTransactions = accounts.reduce(
+    (sum, tx) => sum + Math.max(1, Math.ceil((Number(tx) || 0) / txPageSize)),
+    0
+  );
+  const initialCalls = iAccountList + iBalances + iTransactions;
+  const initialApiCost = initialCalls * price;
+  const registrationCost = bank.registration;
+  const oneTimeCost = initialApiCost + registrationCost;
+
+  // ── Totals ─────────────────────────────────────────────────────────────
+  const monthlyOngoing = recurringCost;
+  const firstMonth = oneTimeCost + recurringCost;
+  const firstYear = oneTimeCost + recurringCost * 12;
+
+  return {
+    accounts: N,
+    pricePerCall: price,
+    historyDays,
+    recurring: {
+      accountListCalls: rAccountList,
+      balanceCalls: rBalances,
+      transactionCalls: rTransactions,
+      totalCalls: recurringCalls,
+      cost: recurringCost,
+    },
+    initial: {
+      registrationCost,
+      accountListCalls: iAccountList,
+      balanceCalls: iBalances,
+      transactionCalls: iTransactions,
+      totalCalls: initialCalls,
+      apiCost: initialApiCost,
+      cost: oneTimeCost,
+    },
+    totals: {
+      oneTime: oneTimeCost,
+      monthlyOngoing,
+      firstMonth,
+      firstYear,
+    },
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { computePricing };
+}
