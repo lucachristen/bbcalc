@@ -11,7 +11,7 @@
   <header class="site-header">
     <div class="wrap">
       <h1>bLink Sync Cost Calculator</h1>
-      <p class="tagline">Estimate what it costs to keep a customer's bank accounts in sync over SIX&nbsp;bLink.</p>
+      <p class="tagline">Estimate the <strong>cost incurred</strong> to keep a customer's bank accounts in sync over SIX&nbsp;bLink — the API-call and registration cost we pay as Service User, not a price charged to end customers.</p>
     </div>
   </header>
 
@@ -40,12 +40,11 @@
 
       <div class="field">
         <label for="history">How far back to load data initially</label>
-        <select id="history">
-          <option value="1">1 month</option>
-          <option value="3" selected>3 months</option>
-          <option value="6">6 months</option>
-          <option value="12">12 months</option>
-        </select>
+        <div class="with-suffix">
+          <input type="number" id="history" min="0" step="1" value="3" inputmode="numeric" />
+          <span class="suffix">months</span>
+        </div>
+        <p class="field-note">Drives the initial balance-history backfill: one call per day per account over this window.</p>
       </div>
 
       <label class="switch">
@@ -71,15 +70,15 @@
     <section class="card results" aria-live="polite" aria-label="Estimated cost">
       <div class="headline">
         <div class="headline-item primary">
-          <span class="headline-label">Ongoing / month</span>
+          <span class="headline-label">Ongoing cost / month</span>
           <span class="headline-value" id="out-monthly">–</span>
         </div>
         <div class="headline-item">
-          <span class="headline-label">One-time setup</span>
+          <span class="headline-label">One-time cost</span>
           <span class="headline-value" id="out-onetime">–</span>
         </div>
         <div class="headline-item">
-          <span class="headline-label">First year total</span>
+          <span class="headline-label">First-year cost</span>
           <span class="headline-value" id="out-year">–</span>
         </div>
       </div>
@@ -113,7 +112,9 @@
       </div>
 
       <p class="disclaimer">
-        Estimate only. All prices in CHF, excl. VAT. Based on SIX bLink price list Annex&nbsp;4
+        Estimate only. These figures are the <strong>cost incurred</strong> — what you pay as
+        Service User for API calls and registration — not a price charged to end customers.
+        All amounts in CHF, excl. VAT. Based on the SIX bLink price list Annex&nbsp;4
         (AIS per-call prices &amp; customer-registration fees) and the documented call-count
         assumptions below. SIX platform participation and onboarding fees are not included —
         they are fixed and independent of the number of users.

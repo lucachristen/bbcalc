@@ -98,6 +98,11 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .field.inline label { margin-bottom: 0; }
 .field.inline input { width: 110px; }
 
+/* input with a trailing unit suffix */
+.with-suffix { position: relative; display: flex; align-items: center; }
+.with-suffix input { padding-right: 74px; }
+.with-suffix .suffix { position: absolute; right: 12px; color: var(--muted); font-size: .9rem; pointer-events: none; }
+
 /* ── Segmented control (frequency) ── */
 .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (max-width: 380px) { .segmented { grid-template-columns: 1fr; } }

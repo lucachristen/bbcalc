@@ -177,7 +177,10 @@
   // ── Bind inputs ────────────────────────────────────────────────────────
   function bind() {
     $('bank').addEventListener('change', function (e) { state.bankId = e.target.value; render(); });
-    $('history').addEventListener('change', function (e) { state.historyMonths = parseInt(e.target.value, 10); render(); });
+    $('history').addEventListener('input', function (e) {
+      state.historyMonths = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
+      render();
+    });
     $('balance-history').addEventListener('change', function (e) { state.loadBalanceHistory = e.target.checked; render(); });
     $('page-size').addEventListener('input', function (e) {
       state.txPageSize = Math.max(1, parseInt(e.target.value, 10) || 1); render();

@@ -18,6 +18,23 @@ python3 -m http.server 8000
 
 The layout is responsive and works on mobile.
 
+## Deploy
+
+The site is served by nginx via the included `Dockerfile` (SPA fallback in `nginx.conf`).
+It's a plain static site with no build step — files live at the repository root and are
+copied straight into nginx's web root.
+
+**Dokploy:** set **Build Type = Dockerfile**, Build Path `/`, branch `main`. No other
+configuration is needed — nginx listens on port 80 and Dokploy proxies to it.
+
+**Locally:**
+
+```bash
+docker build -t bbcalc . && docker run -p 8080:80 bbcalc   # → http://localhost:8080
+```
+
+Or, with no Docker at all, just open `index.html` or run `python3 -m http.server`.
+
 ## What it models
 
 Every request over bLink is an **AIS (Account Information Service)** call, billed at the
