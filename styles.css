@@ -70,7 +70,7 @@ body {
   box-shadow: var(--shadow);
   padding: 20px;
 }
-.results { position: sticky; top: 16px; container-type: inline-size; }
+.results { position: sticky; top: 16px; }
 @media (max-width: 900px) {
   .results { position: static; }
 }
@@ -166,24 +166,24 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 
 /* ── Results headline ── */
 .results-scope { margin: 0 0 10px; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-.headline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
-.headline-sub { display: block; margin-top: 3px; color: var(--muted); font-size: .72rem; font-weight: 600; white-space: nowrap; }
-@media (max-width: 420px) { .headline { grid-template-columns: 1fr; } }
+/* Stacked vertically: one full-width box per row (label left, value right). */
+.headline { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .headline-item {
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 13px 12px;
+  padding: 13px 16px;
 }
 .headline-item.primary { border-color: var(--accent); background: var(--accent-soft); }
-.headline-label { display: block; color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
-/* Scale the number to the results column width (container query) so it never
-   overflows its tile, whatever the layout width. */
-.headline-value { display: block; margin-top: 6px; font-size: clamp(1.05rem, 3.4cqw, 1.5rem); font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
-@media (max-width: 900px) {
-  .headline-value { font-size: clamp(1.2rem, 4.5vw, 1.6rem); }
-}
+.headline-label { color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; }
+.headline-figure { text-align: right; white-space: nowrap; }
+.headline-value { display: block; font-size: clamp(1.25rem, 4vw, 1.6rem); font-weight: 700; letter-spacing: -.01em; }
+.headline-sub { display: block; margin-top: 2px; color: var(--muted); font-size: .74rem; font-weight: 600; white-space: nowrap; }
 
 /* ── Breakdown tables ── */
 .breakdown { margin-top: 8px; }

@@ -6,14 +6,6 @@
   var NUM = new Intl.NumberFormat('de-CH');
   var money = function (n) { return CHF.format(n); };
   var num = function (n) { return NUM.format(n); };
-  // Compact form for large fleet totals so they never overflow the headline tile.
-  // Full precision stays available via the tile's title (hover) and the per-user line.
-  var moneyCompact = function (n) {
-    var a = Math.abs(n);
-    if (a >= 1e6) return 'CHF ' + Number((n / 1e6).toFixed(2)) + 'M';
-    if (a >= 1e4) return 'CHF ' + Number((n / 1e3).toFixed(1)) + 'k';
-    return money(n);
-  };
 
   // ── State ──────────────────────────────────────────────────────────────
   var state = {
@@ -23,6 +15,7 @@
     accounts: DEFAULTS.accounts.slice(),
     historyMonths: DEFAULTS.historyMonths,
     loadBalanceHistory: true,
+    dailyBalanceSync: false,
     txPageSize: DEFAULTS.txPageSize,
     balanceDaysPerMonth: DEFAULTS.balanceDaysPerMonth,
   };
@@ -153,6 +146,8 @@
       balanceDaysPerMonth: state.balanceDaysPerMonth,
       txPageSize: state.txPageSize,
       users: state.users,
+      dailyBalanceSync: state.dailyBalanceSync,
+      daysPerMonth: DAYS_PER_MONTH,
     });
 
     var p = r.pricePerCall;
@@ -164,14 +159,9 @@
     $('results-scope').textContent = users > 1
       ? 'Total across ' + num(users) + ' users'
       : 'Estimate for 1 user';
-    var setHeadline = function (id, value) {
-      var el = $(id);
-      el.textContent = moneyCompact(value);
-      el.title = money(value); // exact figure on hover
-    };
-    setHeadline('out-monthly', fleet.monthlyOngoing);
-    setHeadline('out-onetime', fleet.oneTime);
-    setHeadline('out-year', fleet.firstYear);
+    $('out-monthly').textContent = money(fleet.monthlyOngoing);
+    $('out-onetime').textContent = money(fleet.oneTime);
+    $('out-year').textContent = money(fleet.firstYear);
 
     var perUserNote = function (v) { return users > 1 ? money(v) + ' / user' : ''; };
     $('out-monthly-sub').textContent = perUserNote(perUser.monthlyOngoing);
@@ -212,6 +202,7 @@
       render();
     });
     $('balance-history').addEventListener('change', function (e) { state.loadBalanceHistory = e.target.checked; render(); });
+    $('daily-balance').addEventListener('change', function (e) { state.dailyBalanceSync = e.target.checked; render(); });
     $('page-size').addEventListener('input', function (e) {
       state.txPageSize = Math.max(1, parseInt(e.target.value, 10) || 1); render();
     });

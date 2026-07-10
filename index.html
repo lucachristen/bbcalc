@@ -36,6 +36,11 @@
       <div class="field">
         <span class="label">Sync frequency</span>
         <div class="segmented" id="frequency" role="radiogroup" aria-label="Sync frequency"></div>
+        <label class="switch" style="margin-top:12px">
+          <input type="checkbox" id="daily-balance" />
+          <span>Capture a balance for every day</span>
+        </label>
+        <p class="field-note">Balances have no pagination — one call per day per account. With a weekly sync this means ~1 balance call per day (≈31/mo) instead of one per week (≈4/mo). No effect on daily/4× frequencies, which already fetch daily.</p>
       </div>
 
       <div class="field">
@@ -81,18 +86,24 @@
       <div class="headline">
         <div class="headline-item primary">
           <span class="headline-label">Ongoing cost / month</span>
-          <span class="headline-value" id="out-monthly">–</span>
-          <span class="headline-sub" id="out-monthly-sub"></span>
+          <span class="headline-figure">
+            <span class="headline-value" id="out-monthly">–</span>
+            <span class="headline-sub" id="out-monthly-sub"></span>
+          </span>
         </div>
         <div class="headline-item">
           <span class="headline-label">One-time cost</span>
-          <span class="headline-value" id="out-onetime">–</span>
-          <span class="headline-sub" id="out-onetime-sub"></span>
+          <span class="headline-figure">
+            <span class="headline-value" id="out-onetime">–</span>
+            <span class="headline-sub" id="out-onetime-sub"></span>
+          </span>
         </div>
         <div class="headline-item">
           <span class="headline-label">First-year cost</span>
-          <span class="headline-value" id="out-year">–</span>
-          <span class="headline-sub" id="out-year-sub"></span>
+          <span class="headline-figure">
+            <span class="headline-value" id="out-year">–</span>
+            <span class="headline-sub" id="out-year-sub"></span>
+          </span>
         </div>
       </div>
 

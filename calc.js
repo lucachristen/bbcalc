@@ -41,9 +41,17 @@ function computePricing(input) {
   const N = accounts.length;
 
   // ── Recurring (per month) ──────────────────────────────────────────────
+  // Balances have no pagination: capturing a daily point costs one call per day
+  // per account. When enabled, balances are fetched daily regardless of the sync
+  // frequency — the big difference is on a weekly sync (≈31/mo vs ≈4/mo).
+  const daysPerMonth = input.daysPerMonth || 31;
+  const balanceRunsPerMonth = input.dailyBalanceSync
+    ? Math.max(frequency.syncRunsPerMonth, daysPerMonth)
+    : frequency.syncRunsPerMonth;
+
   const rAccountList = frequency.accountListRunsPerMonth;      // 1 call per run
-  const rBalances    = frequency.syncRunsPerMonth * N;         // N calls per run
-  const rTransactions = frequency.syncRunsPerMonth * N;        // N calls per run
+  const rBalances    = balanceRunsPerMonth * N;               // N calls per balance run
+  const rTransactions = frequency.syncRunsPerMonth * N;        // N calls per sync run
   const recurringCalls = rAccountList + rBalances + rTransactions;
   const recurringCost = recurringCalls * price;
 
