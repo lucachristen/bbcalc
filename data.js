@@ -56,8 +56,9 @@ const DEFAULTS = {
   // Balance history has no list API and no pagination: 1 call per day per account.
   // ~30.5 days/month -> 3 months = 92 balance calls per account (matches reference).
   balanceDaysPerMonth: 30.5,
-  // Transactions API default page size (TXs returned per call) during initial backfill.
-  txPageSize: 25,
+  // Transactions returned per API call during the initial backfill.
+  // 100 is supported by most banks (the API default is lower).
+  txPageSize: 100,
   historyMonths: 3,
   // Reference scenario: 3 accounts with 120 / 40 / 20 expected transactions.
   accounts: [120, 40, 20],

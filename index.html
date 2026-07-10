@@ -65,6 +65,15 @@
       </div>
 
       <div class="field">
+        <label for="page-size">Transactions per API call (page size)</label>
+        <div class="with-suffix">
+          <input type="number" id="page-size" min="1" step="1" value="100" inputmode="numeric" />
+          <span class="suffix">TX / call</span>
+        </div>
+        <p class="field-note">Page size for the initial transaction backfill (⌈expected TX ÷ page size⌉ calls per account). Most banks support 100.</p>
+      </div>
+
+      <div class="field">
         <label for="history">How far back to load data initially</label>
         <div class="with-suffix">
           <input type="number" id="history" min="0" step="1" value="3" inputmode="numeric" />
@@ -81,10 +90,6 @@
 
       <details class="advanced">
         <summary>Advanced assumptions</summary>
-        <div class="field inline">
-          <label for="page-size">Transaction page size (TXs per call)</label>
-          <input type="number" id="page-size" min="1" step="1" value="25" />
-        </div>
         <div class="field inline">
           <label for="balance-days">Balance days per month</label>
           <input type="number" id="balance-days" min="1" step="0.5" value="30.5" />

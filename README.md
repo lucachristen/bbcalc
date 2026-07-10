@@ -92,13 +92,15 @@ provider, but the Service User still pays the full list price shown here.
 The model reproduces the numbers from the internal pricing discussion. For a CHF 0.10/call
 bank with 3 accounts (120 / 40 / 20 expected TX) and a 3-month history load:
 
-| Frequency  | Recurring / month |
-|------------|-------------------|
-| 4× per day | CHF 77.50 |
-| 1× per day | CHF 21.70 |
-| 1× per week | CHF 2.80 |
+| Cadence | Recurring / month |
+|---------|-------------------|
+| Daily, 3 intraday (4/day) | CHF 77.50 |
+| Daily, 0 intraday (1/day) | CHF 21.70 |
+| Weekly | CHF 2.80 |
 
-Initial load = **285 API calls** (1 account list + 92×3 balance-history + 8 TX backfill).
+Initial load = **281 API calls** at the default 100 TX/page (1 account list + 92×3
+balance-history + 4 TX backfill). At 25 TX/page — the API default used in the original
+discussion — it's **285** (8 TX backfill).
 
 ## Files
 
