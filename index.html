@@ -19,6 +19,15 @@
     <!-- ───────────── Inputs ───────────── -->
     <section class="card inputs" aria-label="Configuration">
       <div class="field">
+        <label for="users">Number of users</label>
+        <div class="with-suffix">
+          <input type="number" id="users" min="1" step="1" value="1" inputmode="numeric" />
+          <span class="suffix">users</span>
+        </div>
+        <p class="field-note">The per-user cost below is multiplied by this to estimate the fleet total.</p>
+      </div>
+
+      <div class="field">
         <label for="bank">Bank</label>
         <select id="bank"></select>
         <p class="field-note" id="bank-note"></p>
@@ -68,23 +77,27 @@
 
     <!-- ───────────── Results ───────────── -->
     <section class="card results" aria-live="polite" aria-label="Estimated cost">
+      <p class="results-scope" id="results-scope"></p>
       <div class="headline">
         <div class="headline-item primary">
           <span class="headline-label">Ongoing cost / month</span>
           <span class="headline-value" id="out-monthly">–</span>
+          <span class="headline-sub" id="out-monthly-sub"></span>
         </div>
         <div class="headline-item">
           <span class="headline-label">One-time cost</span>
           <span class="headline-value" id="out-onetime">–</span>
+          <span class="headline-sub" id="out-onetime-sub"></span>
         </div>
         <div class="headline-item">
           <span class="headline-label">First-year cost</span>
           <span class="headline-value" id="out-year">–</span>
+          <span class="headline-sub" id="out-year-sub"></span>
         </div>
       </div>
 
       <div class="breakdown">
-        <h2>Recurring &mdash; per month</h2>
+        <h2>Recurring &mdash; per month, per user</h2>
         <table>
           <tbody id="bd-recurring"></tbody>
           <tfoot>
@@ -98,7 +111,7 @@
       </div>
 
       <div class="breakdown">
-        <h2>Initial load &mdash; one-time</h2>
+        <h2>Initial load &mdash; one-time, per user</h2>
         <table>
           <tbody id="bd-initial"></tbody>
           <tfoot>

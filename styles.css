@@ -165,7 +165,9 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .advanced[open] summary { margin-bottom: 12px; }
 
 /* ── Results headline ── */
+.results-scope { margin: 0 0 10px; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
 .headline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.headline-sub { display: block; margin-top: 3px; color: var(--muted); font-size: .72rem; font-weight: 600; white-space: nowrap; }
 @media (max-width: 420px) { .headline { grid-template-columns: 1fr; } }
 .headline-item {
   min-width: 0;

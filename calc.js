@@ -65,6 +65,9 @@ function computePricing(input) {
   const firstMonth = oneTimeCost + recurringCost;
   const firstYear = oneTimeCost + recurringCost * 12;
 
+  // Fleet totals: per-user costs scaled by the number of users.
+  const users = Math.max(1, Math.floor(Number(input.users) || 1));
+
   return {
     accounts: N,
     pricePerCall: price,
@@ -86,6 +89,22 @@ function computePricing(input) {
       cost: oneTimeCost,
     },
     totals: {
+      users,
+      // Per single user.
+      perUser: {
+        oneTime: oneTimeCost,
+        monthlyOngoing,
+        firstMonth,
+        firstYear,
+      },
+      // Across all users (the fleet estimate).
+      fleet: {
+        oneTime: oneTimeCost * users,
+        monthlyOngoing: monthlyOngoing * users,
+        firstMonth: firstMonth * users,
+        firstYear: firstYear * users,
+      },
+      // Backward-compatible flat fields (per user).
       oneTime: oneTimeCost,
       monthlyOngoing,
       firstMonth,

@@ -6,9 +6,18 @@
   var NUM = new Intl.NumberFormat('de-CH');
   var money = function (n) { return CHF.format(n); };
   var num = function (n) { return NUM.format(n); };
+  // Compact form for large fleet totals so they never overflow the headline tile.
+  // Full precision stays available via the tile's title (hover) and the per-user line.
+  var moneyCompact = function (n) {
+    var a = Math.abs(n);
+    if (a >= 1e6) return 'CHF ' + Number((n / 1e6).toFixed(2)) + 'M';
+    if (a >= 1e4) return 'CHF ' + Number((n / 1e3).toFixed(1)) + 'k';
+    return money(n);
+  };
 
   // ── State ──────────────────────────────────────────────────────────────
   var state = {
+    users: 1,
     bankId: 'ubs',
     frequencyId: '4d',
     accounts: DEFAULTS.accounts.slice(),
@@ -143,14 +152,31 @@
       loadBalanceHistory: state.loadBalanceHistory,
       balanceDaysPerMonth: state.balanceDaysPerMonth,
       txPageSize: state.txPageSize,
+      users: state.users,
     });
 
     var p = r.pricePerCall;
+    var users = r.totals.users;
+    var fleet = r.totals.fleet;
+    var perUser = r.totals.perUser;
 
-    // Headline
-    $('out-monthly').textContent = money(r.totals.monthlyOngoing);
-    $('out-onetime').textContent = money(r.totals.oneTime);
-    $('out-year').textContent = money(r.totals.firstYear);
+    // Scope caption + headline (fleet totals, with per-user sub-lines).
+    $('results-scope').textContent = users > 1
+      ? 'Total across ' + num(users) + ' users'
+      : 'Estimate for 1 user';
+    var setHeadline = function (id, value) {
+      var el = $(id);
+      el.textContent = moneyCompact(value);
+      el.title = money(value); // exact figure on hover
+    };
+    setHeadline('out-monthly', fleet.monthlyOngoing);
+    setHeadline('out-onetime', fleet.oneTime);
+    setHeadline('out-year', fleet.firstYear);
+
+    var perUserNote = function (v) { return users > 1 ? money(v) + ' / user' : ''; };
+    $('out-monthly-sub').textContent = perUserNote(perUser.monthlyOngoing);
+    $('out-onetime-sub').textContent = perUserNote(perUser.oneTime);
+    $('out-year-sub').textContent = perUserNote(perUser.firstYear);
 
     // Recurring breakdown
     $('bd-recurring').innerHTML =
@@ -176,6 +202,10 @@
 
   // ── Bind inputs ────────────────────────────────────────────────────────
   function bind() {
+    $('users').addEventListener('input', function (e) {
+      state.users = e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1);
+      render();
+    });
     $('bank').addEventListener('change', function (e) { state.bankId = e.target.value; render(); });
     $('history').addEventListener('input', function (e) {
       state.historyMonths = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
