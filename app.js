@@ -11,7 +11,8 @@
   var state = {
     users: 1,
     bankId: 'ubs',
-    frequencyId: '4d',
+    cadence: DEFAULTS.cadence,          // 'daily' | 'weekly'
+    intradaySyncs: DEFAULTS.intradaySyncs,
     accounts: DEFAULTS.accounts.slice(),
     historyMonths: DEFAULTS.historyMonths,
     loadBalanceHistory: true,
@@ -36,16 +37,16 @@
 
   function buildFrequencies() {
     var box = $('frequency');
-    FREQUENCIES.forEach(function (f) {
+    CADENCES.forEach(function (c) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.setAttribute('role', 'radio');
-      btn.dataset.id = f.id;
+      btn.dataset.id = c.id;
       btn.innerHTML =
-        '<span class="seg-title">' + f.label + '</span>' +
-        '<span class="seg-hint">' + f.hint + '</span>';
+        '<span class="seg-title">' + c.label + '</span>' +
+        '<span class="seg-hint">' + c.hint + '</span>';
       btn.addEventListener('click', function () {
-        state.frequencyId = f.id;
+        state.cadence = c.id;
         syncFrequencyUI();
         render();
       });
@@ -54,10 +55,18 @@
     syncFrequencyUI();
   }
 
+  // Reflect cadence in the UI: highlight the button, show the intraday input for
+  // daily, show the daily-balance toggle for weekly (where it actually matters).
   function syncFrequencyUI() {
+    var daily = state.cadence === 'daily';
     Array.prototype.forEach.call($('frequency').children, function (btn) {
-      btn.setAttribute('aria-checked', btn.dataset.id === state.frequencyId ? 'true' : 'false');
+      btn.setAttribute('aria-checked', btn.dataset.id === state.cadence ? 'true' : 'false');
     });
+    $('intraday-field').style.display = daily ? '' : 'none';
+    $('daily-balance-field').style.display = daily ? 'none' : '';
+    var perDay = 1 + Math.max(0, state.intradaySyncs);
+    $('intraday-note').textContent =
+      '+ 1 end-of-day close = ' + perDay + ' sync' + (perDay === 1 ? '' : 's') + ' per day.';
   }
 
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
@@ -113,9 +122,13 @@
     var b = BLINK_BANKS.filter(function (x) { return x.id === state.bankId; })[0];
     return b || BLINK_BANKS[0];
   }
+  // Build the frequency object the engine expects from cadence + intraday count.
   function currentFrequency() {
-    var f = FREQUENCIES.filter(function (x) { return x.id === state.frequencyId; })[0];
-    return f || FREQUENCIES[0];
+    if (state.cadence === 'weekly') {
+      return { accountListRunsPerMonth: WEEKS_PER_MONTH, syncRunsPerMonth: WEEKS_PER_MONTH };
+    }
+    var perDay = 1 + Math.max(0, state.intradaySyncs);   // 1 end-of-day close + intraday
+    return { accountListRunsPerMonth: DAYS_PER_MONTH, syncRunsPerMonth: perDay * DAYS_PER_MONTH };
   }
 
   // ── Render results ─────────────────────────────────────────────────────
@@ -203,6 +216,11 @@
     });
     $('balance-history').addEventListener('change', function (e) { state.loadBalanceHistory = e.target.checked; render(); });
     $('daily-balance').addEventListener('change', function (e) { state.dailyBalanceSync = e.target.checked; render(); });
+    $('intraday').addEventListener('input', function (e) {
+      state.intradaySyncs = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
+      syncFrequencyUI();
+      render();
+    });
     $('page-size').addEventListener('input', function (e) {
       state.txPageSize = Math.max(1, parseInt(e.target.value, 10) || 1); render();
     });

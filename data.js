@@ -40,33 +40,19 @@ const BLINK_BANKS = [
 const DAYS_PER_MONTH = 31;   // matches the reference calculation
 const WEEKS_PER_MONTH = 4;   // matches the reference calculation
 
-const FREQUENCIES = [
-  {
-    id: '4d',
-    label: '4× per day',
-    hint: '1 end-of-day + 3 intraday updates',
-    // account list once per day, balances + TXs four times per day
-    accountListRunsPerMonth: DAYS_PER_MONTH,
-    syncRunsPerMonth: 4 * DAYS_PER_MONTH,
-  },
-  {
-    id: '1d',
-    label: '1× per day',
-    hint: 'one update every day',
-    accountListRunsPerMonth: DAYS_PER_MONTH,
-    syncRunsPerMonth: DAYS_PER_MONTH,
-  },
-  {
-    id: '1w',
-    label: '1× per week',
-    hint: 'one update every week',
-    accountListRunsPerMonth: WEEKS_PER_MONTH,
-    syncRunsPerMonth: WEEKS_PER_MONTH,
-  },
+// Two base cadences. For "daily" the number of syncs per day is configurable
+// (1 end-of-day close + N intraday). For "weekly" it's one sync per week.
+const CADENCES = [
+  { id: 'daily',  label: 'Daily',  hint: 'configurable syncs per day' },
+  { id: 'weekly', label: 'Weekly', hint: 'one update per week' },
 ];
 
 // Default assumptions (overridable in the "Advanced" section of the UI).
 const DEFAULTS = {
+  cadence: 'daily',
+  // Intraday syncs, on top of the 1 daily end-of-day close.
+  // 3 intraday + 1 close = 4 syncs/day (the reference scenario).
+  intradaySyncs: 3,
   // Balance history has no list API and no pagination: 1 call per day per account.
   // ~30.5 days/month -> 3 months = 92 balance calls per account (matches reference).
   balanceDaysPerMonth: 30.5,
@@ -78,5 +64,5 @@ const DEFAULTS = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BLINK_BANKS, FREQUENCIES, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
+  module.exports = { BLINK_BANKS, CADENCES, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
 }

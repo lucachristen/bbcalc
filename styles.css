@@ -107,8 +107,8 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .with-suffix .suffix { position: absolute; right: 12px; color: var(--muted); font-size: .9rem; pointer-events: none; }
 
 /* ── Segmented control (frequency) ── */
-.segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-@media (max-width: 380px) { .segmented { grid-template-columns: 1fr; } }
+.segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+@media (max-width: 380px) { .segmented { grid-auto-flow: row; } }
 .segmented button {
   display: flex; flex-direction: column; gap: 3px;
   padding: 12px 10px;

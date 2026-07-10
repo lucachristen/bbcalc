@@ -48,13 +48,18 @@ bank's per-call price. The calculator breaks costs into two parts.
 | Balances      | N (one per account) |
 | Transactions  | N (assumes one call fetches all new TXs) |
 
-Frequency presets — monthly figures use **31 days / 4 weeks**:
+Sync frequency has two cadences — monthly figures use **31 days / 4 weeks**:
 
-- **4× per day** — 1 end-of-day + 3 intraday updates
-- **1× per day**
-- **1× per week**
+- **Daily** — `1 + N` syncs per day, where **N intraday syncs** is configurable
+  (1 end-of-day close + N intraday). So `N = 3` → 4 syncs/day, `N = 0` → 1/day.
+- **Weekly** — one sync per week.
 
-The account list is queried once per day (or once per week for the weekly preset).
+The account list is queried once per sync day (or once per week for the weekly cadence).
+
+On the **weekly** cadence, a **"capture a balance for every day"** toggle switches the
+recurring balance calls from once per week (~4/mo per account) to one per day (~31/mo) —
+because balances have no pagination, each day is a separate call. It has no effect on the
+daily cadence, which already fetches at least daily, so the toggle is shown only for weekly.
 
 ### Initial load — one-time
 

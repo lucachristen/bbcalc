@@ -36,11 +36,23 @@
       <div class="field">
         <span class="label">Sync frequency</span>
         <div class="segmented" id="frequency" role="radiogroup" aria-label="Sync frequency"></div>
-        <label class="switch" style="margin-top:12px">
-          <input type="checkbox" id="daily-balance" />
-          <span>Capture a balance for every day</span>
-        </label>
-        <p class="field-note">Balances have no pagination — one call per day per account. With a weekly sync this means ~1 balance call per day (≈31/mo) instead of one per week (≈4/mo). No effect on daily/4× frequencies, which already fetch daily.</p>
+
+        <div id="intraday-field" style="margin-top:14px">
+          <label for="intraday">Intraday syncs per day</label>
+          <div class="with-suffix">
+            <input type="number" id="intraday" min="0" step="1" value="3" inputmode="numeric" />
+            <span class="suffix">intraday</span>
+          </div>
+          <p class="field-note" id="intraday-note"></p>
+        </div>
+
+        <div id="daily-balance-field" style="margin-top:14px">
+          <label class="switch">
+            <input type="checkbox" id="daily-balance" />
+            <span>Capture a balance for every day</span>
+          </label>
+          <p class="field-note">Balances have no pagination — one call per day per account. On a weekly sync, capturing a daily balance point means ~31 calls/account per month instead of ~4.</p>
+        </div>
       </div>
 
       <div class="field">
