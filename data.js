@@ -47,12 +47,22 @@ const CADENCES = [
   { id: 'weekly', label: 'Weekly', hint: 'one update per week' },
 ];
 
+// How often the account list is refreshed (1 call per refresh), independent of
+// the balance/TX sync cadence. SIX suggests weekly is sufficient.
+const ACCOUNT_LIST_REFRESH = [
+  { id: 'daily',   label: 'Daily',   hint: '≈31 / mo', runsPerMonth: DAYS_PER_MONTH },
+  { id: 'weekly',  label: 'Weekly',  hint: '≈4 / mo',  runsPerMonth: WEEKS_PER_MONTH },
+  { id: 'monthly', label: 'Monthly', hint: '1 / mo',   runsPerMonth: 1 },
+];
+
 // Default assumptions (overridable in the "Advanced" section of the UI).
 const DEFAULTS = {
   cadence: 'daily',
   // Intraday syncs, on top of the 1 daily end-of-day close.
   // 3 intraday + 1 close = 4 syncs/day (the reference scenario).
   intradaySyncs: 3,
+  // Account list refresh cadence — SIX suggests weekly is enough.
+  accountListRefresh: 'weekly',
   // Balance history has no list API and no pagination: 1 call per day per account.
   // ~30.5 days/month -> 3 months = 92 balance calls per account (matches reference).
   balanceDaysPerMonth: 30.5,
@@ -65,5 +75,5 @@ const DEFAULTS = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BLINK_BANKS, CADENCES, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
+  module.exports = { BLINK_BANKS, CADENCES, ACCOUNT_LIST_REFRESH, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
 }

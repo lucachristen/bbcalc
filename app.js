@@ -13,6 +13,7 @@
     bankId: 'ubs',
     cadence: DEFAULTS.cadence,          // 'daily' | 'weekly'
     intradaySyncs: DEFAULTS.intradaySyncs,
+    accountListRefresh: DEFAULTS.accountListRefresh,  // 'daily' | 'weekly' | 'monthly'
     accounts: DEFAULTS.accounts.slice(),
     historyMonths: DEFAULTS.historyMonths,
     loadBalanceHistory: true,
@@ -69,6 +70,32 @@
       '+ 1 end-of-day close = ' + perDay + ' sync' + (perDay === 1 ? '' : 's') + ' per day.';
   }
 
+  function buildAccountListRefresh() {
+    var box = $('account-list-refresh');
+    ACCOUNT_LIST_REFRESH.forEach(function (o) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'radio');
+      btn.dataset.id = o.id;
+      btn.innerHTML =
+        '<span class="seg-title">' + o.label + '</span>' +
+        '<span class="seg-hint">' + o.hint + '</span>';
+      btn.addEventListener('click', function () {
+        state.accountListRefresh = o.id;
+        syncAccountListUI();
+        render();
+      });
+      box.appendChild(btn);
+    });
+    syncAccountListUI();
+  }
+
+  function syncAccountListUI() {
+    Array.prototype.forEach.call($('account-list-refresh').children, function (btn) {
+      btn.setAttribute('aria-checked', btn.dataset.id === state.accountListRefresh ? 'true' : 'false');
+    });
+  }
+
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
   function renderAccounts() {
     var box = $('accounts');
@@ -122,13 +149,15 @@
     var b = BLINK_BANKS.filter(function (x) { return x.id === state.bankId; })[0];
     return b || BLINK_BANKS[0];
   }
-  // Build the frequency object the engine expects from cadence + intraday count.
+  // Build the frequency object the engine expects. Account-list refresh is
+  // independent of the balance/TX sync cadence.
   function currentFrequency() {
-    if (state.cadence === 'weekly') {
-      return { accountListRunsPerMonth: WEEKS_PER_MONTH, syncRunsPerMonth: WEEKS_PER_MONTH };
-    }
-    var perDay = 1 + Math.max(0, state.intradaySyncs);   // 1 end-of-day close + intraday
-    return { accountListRunsPerMonth: DAYS_PER_MONTH, syncRunsPerMonth: perDay * DAYS_PER_MONTH };
+    var alr = ACCOUNT_LIST_REFRESH.filter(function (o) { return o.id === state.accountListRefresh; })[0]
+      || ACCOUNT_LIST_REFRESH[1];
+    var syncRunsPerMonth = state.cadence === 'weekly'
+      ? WEEKS_PER_MONTH
+      : (1 + Math.max(0, state.intradaySyncs)) * DAYS_PER_MONTH;   // 1 close + intraday
+    return { accountListRunsPerMonth: alr.runsPerMonth, syncRunsPerMonth: syncRunsPerMonth };
   }
 
   // ── Render results ─────────────────────────────────────────────────────
@@ -237,6 +266,7 @@
   // ── Init ───────────────────────────────────────────────────────────────
   buildBanks();
   buildFrequencies();
+  buildAccountListRefresh();
   renderAccounts();
   bind();
   render();

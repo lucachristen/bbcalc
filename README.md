@@ -54,7 +54,9 @@ Sync frequency has two cadences — monthly figures use **31 days / 4 weeks**:
   (1 end-of-day close + N intraday). So `N = 3` → 4 syncs/day, `N = 0` → 1/day.
 - **Weekly** — one sync per week.
 
-The account list is queried once per sync day (or once per week for the weekly cadence).
+The **account list refresh** is configured independently of the balance/TX sync
+(Daily ≈31/mo · Weekly ≈4/mo · Monthly 1/mo, 1 call each). SIX suggests weekly is
+sufficient, so it defaults to Weekly.
 
 On the **weekly** cadence, a **"capture a balance for every day"** toggle switches the
 recurring balance calls from once per week (~4/mo per account) to one per day (~31/mo) —
@@ -92,11 +94,15 @@ provider, but the Service User still pays the full list price shown here.
 The model reproduces the numbers from the internal pricing discussion. For a CHF 0.10/call
 bank with 3 accounts (120 / 40 / 20 expected TX) and a 3-month history load:
 
+With **account list refresh = Daily** (as in the original discussion):
+
 | Cadence | Recurring / month |
 |---------|-------------------|
 | Daily, 3 intraday (4/day) | CHF 77.50 |
 | Daily, 0 intraday (1/day) | CHF 21.70 |
 | Weekly | CHF 2.80 |
+
+With the default **weekly** account list refresh, the 4/day case is CHF 74.80.
 
 Initial load = **281 API calls** at the default 100 TX/page (1 account list + 92×3
 balance-history + 4 TX backfill). At 25 TX/page — the API default used in the original
