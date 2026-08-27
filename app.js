@@ -24,6 +24,8 @@
     dailyBalanceSync: false,
     txPageSize: DEFAULTS.txPageSize,
     daysPerMonth: DEFAULTS.daysPerMonth,
+    weeksPerMonth: DEFAULTS.weeksPerMonth,
+    daysPerYear: DEFAULTS.daysPerYear,
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -105,10 +107,10 @@
   function updateBasisNote() {
     var dpm = state.daysPerMonth;
     var round2 = function (n) { return Math.round(n * 100) / 100; };
+    var wpm = state.weeksPerMonth, dpy = state.daysPerYear;
     $('basis-note').innerHTML =
-      'One basis for every per-month figure: <strong>' + dpm + ' days/month</strong>. ' +
-      'So a daily cadence = ' + dpm + '×/mo, weekly = ' + round2(dpm / 7) + '×/mo, monthly = 1×/mo, ' +
-      'and a year = 12 × ' + dpm + ' = ' + round2(dpm * 12) + ' days.';
+      'Daily cadence = ' + dpm + '×/mo, weekly = ' + wpm + '×/mo, monthly = 1×/mo. ' +
+      'A year = ' + dpy + ' days ÷ ' + dpm + ' days/month = ' + round2(dpy / dpm) + ' months.';
   }
 
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
@@ -167,10 +169,9 @@
   // Runs per month for a given refresh cadence, derived from the live days/month
   // basis so daily / weekly / monthly are always mutually consistent.
   function runsPerMonth(cadenceId) {
-    var dpm = state.daysPerMonth;
-    if (cadenceId === 'daily') return dpm;
+    if (cadenceId === 'daily') return state.daysPerMonth;
     if (cadenceId === 'monthly') return 1;
-    return dpm / 7;   // weekly
+    return state.weeksPerMonth;   // weekly
   }
 
   // Build the frequency object the engine expects. Account-list refresh is
@@ -208,6 +209,7 @@
       users: state.users,
       dailyBalanceSync: state.dailyBalanceSync,
       daysPerMonth: state.daysPerMonth,
+      daysPerYear: state.daysPerYear,
     });
 
     var p = r.pricePerCall;
@@ -289,11 +291,16 @@
     $('page-size').addEventListener('input', function (e) {
       state.txPageSize = Math.max(1, parseInt(e.target.value, 10) || 1); render();
     });
-    $('days-per-month').addEventListener('input', function (e) {
-      state.daysPerMonth = Math.max(1, parseFloat(e.target.value) || 1);
-      updateBasisNote();
-      render();
-    });
+    var basisInput = function (id, key, min) {
+      $(id).addEventListener('input', function (e) {
+        state[key] = Math.max(min, parseFloat(e.target.value) || min);
+        updateBasisNote();
+        render();
+      });
+    };
+    basisInput('days-per-month', 'daysPerMonth', 1);
+    basisInput('weeks-per-month', 'weeksPerMonth', 0.1);
+    basisInput('days-per-year', 'daysPerYear', 1);
     $('add-account').addEventListener('click', function () {
       state.accounts.push(20);
       renderAccounts();

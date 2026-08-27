@@ -72,9 +72,13 @@ function computePricing(input) {
   const oneTimeCost = initialApiCost + registrationCost;
 
   // ── Totals ─────────────────────────────────────────────────────────────
+  // A year is days-per-year worth of months (days/year ÷ days/month), so the
+  // annual projection stays consistent with the daily rate.
+  const daysPerYear = input.daysPerYear || (daysPerMonth * 12);
+  const monthsPerYear = daysPerYear / daysPerMonth;
   const monthlyOngoing = recurringCost;
   const firstMonth = oneTimeCost + recurringCost;
-  const firstYear = oneTimeCost + recurringCost * 12;
+  const firstYear = oneTimeCost + recurringCost * monthsPerYear;
 
   // Fleet totals: per-user costs scaled by the number of users.
   const users = Math.max(1, Math.floor(Number(input.users) || 1));

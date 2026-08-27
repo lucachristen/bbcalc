@@ -37,12 +37,10 @@ const BLINK_BANKS = [
  * The monthly multipliers below reproduce the reference figures from the pricing
  * discussion (N = 3, CHF 0.10/call): 77.50 / 21.70 / 2.80 CHF per month.
  */
-// One consistent basis for EVERY per-month conversion (daily syncs, account-list
-// refresh, recurring balances, initial balance history). Average calendar month =
-// 365.25 / 12 ≈ 30.44 days, so recurring × 12 correctly represents one real year.
-// Weekly and monthly cadences are derived from this, never hard-coded separately.
-const DAYS_PER_MONTH = 30.44;
-const WEEKS_PER_MONTH = DAYS_PER_MONTH / 7;   // ≈ 4.35
+// Calendar bases used for per-month / per-year conversions. Independently
+// configurable in the UI; these are just the defaults.
+const DAYS_PER_MONTH = 30;
+const WEEKS_PER_MONTH = 4;
 
 // Two base cadences. For "daily" the number of syncs per day is configurable
 // (1 end-of-day close + N intraday). For "weekly" it's one sync per week.
@@ -69,9 +67,10 @@ const DEFAULTS = {
   intradaySyncs: 3,
   // Account list refresh cadence — SIX suggests weekly is enough.
   accountListRefresh: 'weekly',
-  // Single per-month basis (see DAYS_PER_MONTH) used for all monthly conversions,
-  // including the initial balance-history backfill (1 call per day per account).
-  daysPerMonth: DAYS_PER_MONTH,
+  // Calendar bases — independently configurable, plain round numbers by default.
+  daysPerMonth: 30,     // daily counts + balance history
+  weeksPerMonth: 4,     // weekly cadence
+  daysPerYear: 365,     // annual projection
   // Transactions returned per API call during the initial backfill.
   // 100 is supported by most banks (the API default is lower).
   txPageSize: 100,

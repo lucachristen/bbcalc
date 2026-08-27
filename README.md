@@ -76,9 +76,10 @@ Balance history is the single biggest cost driver and can be toggled off.
 
 ## Configurable inputs
 
-- **Days per month** (top of the form) — one basis for *all* per-month conversions
-  (daily = it, weekly = ÷7, monthly = 1), so `recurring × 12` equals a real year. Default
-  30.44 (= 365.25/12). Set it to 31 to use the round-month convention from the discussion.
+- **Calendar basis** (top of the form) — three independent fields: **days/month** (daily
+  counts + balance history), **weeks/month** (weekly cadence), **days/year** (annual
+  projection, `months/year = days-year ÷ days-month`). Defaults are plain round numbers
+  (30 / 4 / 365); each label shows the accurate calendar value (30.44 / 4.35 / 365.25).
 - **Price per API call** and **Registration** (under the bank) — pre-filled from the price
   list for the selected bank, editable to model negotiated / volume rates.
 - Plus users, sync cadence + intraday count, account-list refresh, accounts & expected TX,

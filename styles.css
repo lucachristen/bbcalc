@@ -111,6 +111,12 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 @media (max-width: 460px) { .two-col { grid-template-columns: 1fr; } }
 .two-col label { font-size: .82rem; }
 
+/* three inputs side by side (calendar basis) */
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 520px) { .three-col { grid-template-columns: 1fr; } }
+.three-col label { font-size: .82rem; }
+.hint-num { display: block; font-weight: 400; color: var(--muted); font-size: .72rem; }
+
 /* ── Segmented control (frequency) ── */
 .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 @media (max-width: 380px) { .segmented { grid-auto-flow: row; } }
