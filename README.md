@@ -40,28 +40,21 @@ Or, with no Docker at all, just open `index.html` or run `python3 -m http.server
 Every request over bLink is an **AIS (Account Information Service)** call, billed at the
 bank's per-call price. The calculator breaks costs into two parts.
 
-### Recurring — per sync run (N = number of accounts)
+### Recurring — per month (N = number of accounts)
 
-| Item          | Calls |
-|---------------|-------|
-| Account list  | 1 (once per run) |
-| Balances      | N (one per account) |
-| Transactions  | N (assumes one call fetches all new TXs) |
+Account list, balances and transactions each run on their **own independent cadence**:
 
-Sync frequency has two cadences — monthly figures use **31 days / 4 weeks**:
+| Sync | Calls per run | Cadence options |
+|------|---------------|-----------------|
+| Account list | 1 | Daily · Weekly · Monthly |
+| Balances | N (one per account) | Daily (× syncs/day) · Weekly |
+| Transactions | N (one call fetches all new TXs) | Daily (× syncs/day) · Weekly |
 
-- **Daily** — `1 + N` syncs per day, where **N intraday syncs** is configurable
-  (1 end-of-day close + N intraday). So `N = 3` → 4 syncs/day, `N = 0` → 1/day.
-- **Weekly** — one sync per week.
-
-The **account list refresh** is configured independently of the balance/TX sync
-(Daily ≈31/mo · Weekly ≈4/mo · Monthly 1/mo, 1 call each). SIX suggests weekly is
-sufficient, so it defaults to Weekly.
-
-On the **weekly** cadence, a **"capture a balance for every day"** toggle switches the
-recurring balance calls from once per week (~4/mo per account) to one per day (~31/mo) —
-because balances have no pagination, each day is a separate call. It has no effect on the
-daily cadence, which already fetches at least daily, so the toggle is shown only for weekly.
+Runs per month come from the **calendar basis**: a daily cadence = `syncs/day × days/month`,
+weekly = `weeks/month`, monthly = 1. So, e.g., balances 4×/day with 30 days/month = 120
+balance-syncs/month, while transactions can be weekly at the same time — fully decoupled.
+This also covers the no-pagination balance case: set balances to daily and transactions to
+weekly to capture a daily balance point without daily TX fetches.
 
 ### Initial load — one-time
 

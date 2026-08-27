@@ -29,7 +29,7 @@
 function computePricing(input) {
   const {
     bank,                 // { aisPerCall, registration }
-    frequency,            // { accountListRunsPerMonth, syncRunsPerMonth }
+    frequency,            // { accountListRunsPerMonth, balanceRunsPerMonth, transactionRunsPerMonth }
     accounts,             // number[]  expected TX per account over the load window
     historyMonths,        // how far back to load data initially
     loadBalanceHistory,   // boolean
@@ -46,16 +46,10 @@ function computePricing(input) {
   const registrationCost = val(input.registration, bank.registration);
 
   // ── Recurring (per month) ──────────────────────────────────────────────
-  // Balances have no pagination: capturing a daily point costs one call per day
-  // per account. When enabled, balances are fetched daily regardless of the sync
-  // frequency — the big difference is on a weekly sync (daily vs weekly).
-  const balanceRunsPerMonth = input.dailyBalanceSync
-    ? Math.max(frequency.syncRunsPerMonth, daysPerMonth)
-    : frequency.syncRunsPerMonth;
-
-  const rAccountList = frequency.accountListRunsPerMonth;      // 1 call per run
-  const rBalances    = balanceRunsPerMonth * N;               // N calls per balance run
-  const rTransactions = frequency.syncRunsPerMonth * N;        // N calls per sync run
+  // Account list, balances and transactions each run on their own cadence.
+  const rAccountList  = frequency.accountListRunsPerMonth;          // 1 call per refresh
+  const rBalances     = frequency.balanceRunsPerMonth * N;          // N calls per balance sync
+  const rTransactions = frequency.transactionRunsPerMonth * N;      // N calls per transaction sync
   const recurringCalls = rAccountList + rBalances + rTransactions;
   const recurringCost = recurringCalls * price;
 

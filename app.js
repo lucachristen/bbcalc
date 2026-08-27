@@ -11,24 +11,33 @@
   var DEFAULT_BANK = BLINK_BANKS.filter(function (b) { return b.id === 'ubs'; })[0] || BLINK_BANKS[0];
 
   var state = {
-    users: 1,
-    bankId: DEFAULT_BANK.id,
-    pricePerCall: DEFAULT_BANK.aisPerCall,    // editable; bank selection pre-fills it
-    registration: DEFAULT_BANK.registration,  // editable; bank selection pre-fills it
-    cadence: DEFAULTS.cadence,          // 'daily' | 'weekly'
-    intradaySyncs: DEFAULTS.intradaySyncs,
-    accountListRefresh: DEFAULTS.accountListRefresh,  // 'daily' | 'weekly' | 'monthly'
-    accounts: DEFAULTS.accounts.slice(),
-    historyMonths: DEFAULTS.historyMonths,
-    loadBalanceHistory: true,
-    dailyBalanceSync: false,
-    txPageSize: DEFAULTS.txPageSize,
+    // calendar basis
     daysPerMonth: DEFAULTS.daysPerMonth,
     weeksPerMonth: DEFAULTS.weeksPerMonth,
     daysPerYear: DEFAULTS.daysPerYear,
+    // bank pricing
+    bankId: DEFAULT_BANK.id,
+    pricePerCall: DEFAULT_BANK.aisPerCall,    // editable; bank selection pre-fills it
+    registration: DEFAULT_BANK.registration,  // editable; bank selection pre-fills it
+    users: 1,
+    // account assumptions
+    accounts: DEFAULTS.accounts.slice(),
+    // account list syncs
+    accountListRefresh: DEFAULTS.accountListRefresh,  // 'daily' | 'weekly' | 'monthly'
+    // balance syncs (independent)
+    balanceCadence: 'daily',       // 'daily' | 'weekly'
+    balanceSyncsPerDay: 4,
+    // transaction syncs (independent)
+    txCadence: 'daily',            // 'daily' | 'weekly'
+    txSyncsPerDay: 4,
+    // initial load config
+    historyMonths: DEFAULTS.historyMonths,
+    loadBalanceHistory: true,
+    txPageSize: DEFAULTS.txPageSize,
   };
 
   var $ = function (id) { return document.getElementById(id); };
+  var round2 = function (n) { return Math.round(n * 100) / 100; };
 
   // ── Build static controls ──────────────────────────────────────────────
   function buildBanks() {
@@ -42,8 +51,10 @@
     sel.value = state.bankId;
   }
 
-  function buildFrequencies() {
-    var box = $('frequency');
+  // A daily/weekly cadence selector for a sync type (balances, transactions).
+  // Each has its own per-day count when daily, fully independent of the others.
+  function buildSyncCadence(segId, cadenceKey, syncUiFn) {
+    var box = $(segId);
     CADENCES.forEach(function (c) {
       var btn = document.createElement('button');
       btn.type = 'button';
@@ -51,29 +62,40 @@
       btn.dataset.id = c.id;
       btn.innerHTML =
         '<span class="seg-title">' + c.label + '</span>' +
-        '<span class="seg-hint">' + c.hint + '</span>';
+        '<span class="seg-hint">' + (c.id === 'daily' ? 'syncs per day' : 'once per week') + '</span>';
       btn.addEventListener('click', function () {
-        state.cadence = c.id;
-        syncFrequencyUI();
+        state[cadenceKey] = c.id;
+        syncUiFn();
         render();
       });
       box.appendChild(btn);
     });
-    syncFrequencyUI();
+    syncUiFn();
   }
 
-  // Reflect cadence in the UI: highlight the button, show the intraday input for
-  // daily, show the daily-balance toggle for weekly (where it actually matters).
-  function syncFrequencyUI() {
-    var daily = state.cadence === 'daily';
-    Array.prototype.forEach.call($('frequency').children, function (btn) {
-      btn.setAttribute('aria-checked', btn.dataset.id === state.cadence ? 'true' : 'false');
+  function markSeg(segId, selectedId) {
+    Array.prototype.forEach.call($(segId).children, function (btn) {
+      btn.setAttribute('aria-checked', btn.dataset.id === selectedId ? 'true' : 'false');
     });
-    $('intraday-field').style.display = daily ? '' : 'none';
-    $('daily-balance-field').style.display = daily ? 'none' : '';
-    var perDay = 1 + Math.max(0, state.intradaySyncs);
-    $('intraday-note').textContent =
-      '+ 1 end-of-day close = ' + perDay + ' sync' + (perDay === 1 ? '' : 's') + ' per day.';
+  }
+
+  function syncCalcText(cadence, perDay) {
+    if (cadence === 'daily') {
+      return perDay + '×/day × ' + round2(state.daysPerMonth) + ' days = ' +
+        round2(perDay * state.daysPerMonth) + ' syncs/month.';
+    }
+    return round2(state.weeksPerMonth) + ' syncs/month.';
+  }
+
+  function syncBalanceUI() {
+    markSeg('balance-freq', state.balanceCadence);
+    $('balance-perday-wrap').style.display = state.balanceCadence === 'daily' ? '' : 'none';
+    $('balance-sync-calc').textContent = syncCalcText(state.balanceCadence, state.balanceSyncsPerDay);
+  }
+  function syncTxUI() {
+    markSeg('tx-freq', state.txCadence);
+    $('tx-perday-wrap').style.display = state.txCadence === 'daily' ? '' : 'none';
+    $('tx-sync-calc').textContent = syncCalcText(state.txCadence, state.txSyncsPerDay);
   }
 
   function buildAccountListRefresh() {
@@ -105,11 +127,9 @@
   // Make the single per-month basis explicit: show what daily/weekly/monthly and
   // a year work out to for the current value.
   function updateBasisNote() {
-    var dpm = state.daysPerMonth;
-    var round2 = function (n) { return Math.round(n * 100) / 100; };
-    var dpy = state.daysPerYear;
+    var dpm = state.daysPerMonth, dpy = state.daysPerYear;
     $('basis-note').innerHTML =
-      'Annual projection: ' + dpy + ' ÷ ' + dpm + ' = ' + round2(dpy / dpm) + ' months/year. Actual&nbsp;≈&nbsp;365.25.';
+      'Annual projection: ' + dpy + ' ÷ ' + dpm + ' = ' + round2(dpy / dpm) + ' months/year. Actual&nbsp;≈&nbsp;365.28.';
   }
 
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
@@ -173,15 +193,16 @@
     return state.weeksPerMonth;   // weekly
   }
 
-  // Build the frequency object the engine expects. Account-list refresh is
-  // independent of the balance/TX sync cadence.
+  function syncRunsFor(cadence, perDay) {
+    return cadence === 'daily' ? Math.max(0, perDay) * state.daysPerMonth : state.weeksPerMonth;
+  }
+
+  // Account-list, balance and transaction syncs each run on their own cadence.
   function currentFrequency() {
-    var syncRunsPerMonth = state.cadence === 'weekly'
-      ? runsPerMonth('weekly')
-      : (1 + Math.max(0, state.intradaySyncs)) * state.daysPerMonth;   // 1 close + intraday
     return {
       accountListRunsPerMonth: runsPerMonth(state.accountListRefresh),
-      syncRunsPerMonth: syncRunsPerMonth,
+      balanceRunsPerMonth: syncRunsFor(state.balanceCadence, state.balanceSyncsPerDay),
+      transactionRunsPerMonth: syncRunsFor(state.txCadence, state.txSyncsPerDay),
     };
   }
 
@@ -206,10 +227,13 @@
       loadBalanceHistory: state.loadBalanceHistory,
       txPageSize: state.txPageSize,
       users: state.users,
-      dailyBalanceSync: state.dailyBalanceSync,
       daysPerMonth: state.daysPerMonth,
       daysPerYear: state.daysPerYear,
     });
+
+    // Live per-section sync math notes.
+    $('balance-sync-calc').textContent = syncCalcText(state.balanceCadence, state.balanceSyncsPerDay);
+    $('tx-sync-calc').textContent = syncCalcText(state.txCadence, state.txSyncsPerDay);
 
     var p = r.pricePerCall;
     var users = r.totals.users;
@@ -281,10 +305,14 @@
       render();
     });
     $('balance-history').addEventListener('change', function (e) { state.loadBalanceHistory = e.target.checked; render(); });
-    $('daily-balance').addEventListener('change', function (e) { state.dailyBalanceSync = e.target.checked; render(); });
-    $('intraday').addEventListener('input', function (e) {
-      state.intradaySyncs = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
-      syncFrequencyUI();
+    $('balance-perday').addEventListener('input', function (e) {
+      state.balanceSyncsPerDay = e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1);
+      syncBalanceUI();
+      render();
+    });
+    $('tx-perday').addEventListener('input', function (e) {
+      state.txSyncsPerDay = e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1);
+      syncTxUI();
       render();
     });
     $('page-size').addEventListener('input', function (e) {
@@ -309,8 +337,9 @@
 
   // ── Init ───────────────────────────────────────────────────────────────
   buildBanks();
-  buildFrequencies();
   buildAccountListRefresh();
+  buildSyncCadence('balance-freq', 'balanceCadence', syncBalanceUI);
+  buildSyncCadence('tx-freq', 'txCadence', syncTxUI);
   updateBasisNote();
   renderAccounts();
   bind();

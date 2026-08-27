@@ -75,6 +75,14 @@ body {
   .results { position: static; }
 }
 
+/* ── Sections ── */
+.section { padding: 18px 0; border-top: 1px solid var(--border); }
+.section:first-child { padding-top: 0; border-top: none; }
+.section:last-child { padding-bottom: 0; }
+.section-title { margin: 0 0 10px; font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
+.section .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section .field-head .section-title { margin-bottom: 0; }
+
 /* ── Fields ── */
 .field { margin-bottom: 20px; }
 .field:last-child { margin-bottom: 0; }
