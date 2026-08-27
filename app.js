@@ -107,10 +107,9 @@
   function updateBasisNote() {
     var dpm = state.daysPerMonth;
     var round2 = function (n) { return Math.round(n * 100) / 100; };
-    var wpm = state.weeksPerMonth, dpy = state.daysPerYear;
+    var dpy = state.daysPerYear;
     $('basis-note').innerHTML =
-      'Daily cadence = ' + dpm + '×/mo, weekly = ' + wpm + '×/mo, monthly = 1×/mo. ' +
-      'A year = ' + dpy + ' days ÷ ' + dpm + ' days/month = ' + round2(dpy / dpm) + ' months.';
+      'Annual projection: ' + dpy + ' ÷ ' + dpm + ' = ' + round2(dpy / dpm) + ' months/year. Actual&nbsp;≈&nbsp;365.25.';
   }
 
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
