@@ -61,11 +61,13 @@ weekly to capture a daily balance point without daily TX fetches.
 | Item                    | Calls |
 |-------------------------|-------|
 | Account list            | 1 |
-| Balance history         | 1 per day per account over the load window (no pagination) — optional |
+| Balance history         | 1 per point per account over the window, at the **balance-sync cadence** (daily → 1/day, weekly → 1/week, monthly → 1/month; no pagination) — optional |
 | Transaction backfill    | ⌈expected TX ÷ page size⌉ per account |
 | Customer registration   | the bank's one-time registration fee |
 
-Balance history is the single biggest cost driver and can be toggled off.
+The backfill respects the config: the balance history granularity follows the balance-sync
+cadence, and the TX backfill follows the page size. Balance history is the biggest one-time
+cost driver and can be toggled off.
 
 ## Configurable inputs
 

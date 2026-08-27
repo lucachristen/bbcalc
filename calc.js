@@ -54,9 +54,12 @@ function computePricing(input) {
   const recurringCost = recurringCalls * price;
 
   // ── One-time (initial load) ────────────────────────────────────────────
-  const historyDays = Math.round(historyMonths * daysPerMonth);
+  // Historical balance points are loaded at the ongoing balance-sync cadence
+  // (daily/weekly/monthly), so the backfill respects the config, not just days.
+  const backfillPointsPerMonth = input.balanceBackfillPointsPerMonth || daysPerMonth;
+  const historyPoints = Math.round(historyMonths * backfillPointsPerMonth);
   const iAccountList = 1;
-  const iBalances = loadBalanceHistory ? historyDays * N : 0;
+  const iBalances = loadBalanceHistory ? historyPoints * N : 0;
   const iTransactions = accounts.reduce(
     (sum, tx) => sum + Math.max(1, Math.ceil((Number(tx) || 0) / txPageSize)),
     0
@@ -80,7 +83,7 @@ function computePricing(input) {
   return {
     accounts: N,
     pricePerCall: price,
-    historyDays,
+    historyPoints,
     recurring: {
       accountListCalls: rAccountList,
       balanceCalls: rBalances,

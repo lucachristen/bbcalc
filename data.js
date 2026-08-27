@@ -59,6 +59,14 @@ const ACCOUNT_LIST_REFRESH = [
   { id: 'monthly', label: 'Monthly', hint: 'every month' },
 ];
 
+// Cadence options for the balance- and transaction-sync sections. Daily carries
+// a configurable syncs-per-day count; weekly and monthly are one sync per period.
+const SYNC_CADENCES = [
+  { id: 'daily',   label: 'Daily',   hint: 'syncs per day' },
+  { id: 'weekly',  label: 'Weekly',  hint: 'once per week' },
+  { id: 'monthly', label: 'Monthly', hint: 'once per month' },
+];
+
 // Default assumptions (overridable in the "Advanced" section of the UI).
 const DEFAULTS = {
   cadence: 'daily',
@@ -80,5 +88,5 @@ const DEFAULTS = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BLINK_BANKS, CADENCES, ACCOUNT_LIST_REFRESH, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
+  module.exports = { BLINK_BANKS, CADENCES, ACCOUNT_LIST_REFRESH, SYNC_CADENCES, DEFAULTS, DAYS_PER_MONTH, WEEKS_PER_MONTH };
 }

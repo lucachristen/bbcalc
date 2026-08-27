@@ -55,14 +55,14 @@
   // Each has its own per-day count when daily, fully independent of the others.
   function buildSyncCadence(segId, cadenceKey, syncUiFn) {
     var box = $(segId);
-    CADENCES.forEach(function (c) {
+    SYNC_CADENCES.forEach(function (c) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.setAttribute('role', 'radio');
       btn.dataset.id = c.id;
       btn.innerHTML =
         '<span class="seg-title">' + c.label + '</span>' +
-        '<span class="seg-hint">' + (c.id === 'daily' ? 'syncs per day' : 'once per week') + '</span>';
+        '<span class="seg-hint">' + c.hint + '</span>';
       btn.addEventListener('click', function () {
         state[cadenceKey] = c.id;
         syncUiFn();
@@ -84,6 +84,7 @@
       return perDay + '×/day × ' + round2(state.daysPerMonth) + ' days = ' +
         round2(perDay * state.daysPerMonth) + ' syncs/month.';
     }
+    if (cadence === 'monthly') return '1 sync/month.';
     return round2(state.weeksPerMonth) + ' syncs/month.';
   }
 
@@ -194,7 +195,17 @@
   }
 
   function syncRunsFor(cadence, perDay) {
-    return cadence === 'daily' ? Math.max(0, perDay) * state.daysPerMonth : state.weeksPerMonth;
+    if (cadence === 'daily') return Math.max(0, perDay) * state.daysPerMonth;
+    if (cadence === 'monthly') return 1;
+    return state.weeksPerMonth;   // weekly
+  }
+
+  // Historical balance points loaded per month during the backfill, at the ongoing
+  // balance-sync cadence (daily backfill is 1/day — no intraday history).
+  function balanceBackfillPointsPerMonth() {
+    if (state.balanceCadence === 'weekly') return state.weeksPerMonth;
+    if (state.balanceCadence === 'monthly') return 1;
+    return state.daysPerMonth;   // daily
   }
 
   // Account-list, balance and transaction syncs each run on their own cadence.
@@ -225,6 +236,7 @@
       accounts: state.accounts,
       historyMonths: state.historyMonths,
       loadBalanceHistory: state.loadBalanceHistory,
+      balanceBackfillPointsPerMonth: balanceBackfillPointsPerMonth(),
       txPageSize: state.txPageSize,
       users: state.users,
       daysPerMonth: state.daysPerMonth,
@@ -262,9 +274,10 @@
     $('bd-recurring-cost').textContent = money(r.recurring.cost);
 
     // Initial breakdown
+    var balUnit = state.balanceCadence === 'weekly' ? 'wk' : state.balanceCadence === 'monthly' ? 'mo' : 'd';
     var initRows =
       rowHTML('Account list', r.initial.accountListCalls, r.initial.accountListCalls * p) +
-      rowHTML('Balance history (' + r.historyDays + ' d × ' + r.accounts + ' acct)', r.initial.balanceCalls, r.initial.balanceCalls * p) +
+      rowHTML('Balance history (' + r.historyPoints + ' ' + balUnit + ' × ' + r.accounts + ' acct)', r.initial.balanceCalls, r.initial.balanceCalls * p) +
       rowHTML('Transaction backfill', r.initial.transactionCalls, r.initial.transactionCalls * p);
     if (r.initial.registrationCost > 0) {
       initRows += '<tr><td>Customer registration</td><td class="muted-cell">—</td><td>' +
