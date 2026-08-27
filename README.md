@@ -74,9 +74,19 @@ daily cadence, which already fetches at least daily, so the toggle is shown only
 
 Balance history is the single biggest cost driver and can be toggled off.
 
+## Configurable inputs
+
+- **Days per month** (top of the form) — one basis for *all* per-month conversions
+  (daily = it, weekly = ÷7, monthly = 1), so `recurring × 12` equals a real year. Default
+  30.44 (= 365.25/12). Set it to 31 to use the round-month convention from the discussion.
+- **Price per API call** and **Registration** (under the bank) — pre-filled from the price
+  list for the selected bank, editable to model negotiated / volume rates.
+- Plus users, sync cadence + intraday count, account-list refresh, accounts & expected TX,
+  TX page size, history depth, and the balance-history toggles.
+
 ## Pricing source
 
-Bank prices come from the **SIX bLink Platform Price List, Annex 4** (D0554.EN.13):
+Default bank prices come from the **SIX bLink Platform Price List, Annex 4** (D0554.EN.13):
 
 - Per-call price = the bank's **AIS** rate (§8.3)
 - Registration fee = §8.2
@@ -91,10 +101,8 @@ provider, but the Service User still pays the full list price shown here.
 
 ## Reference figures
 
-The model reproduces the numbers from the internal pricing discussion. For a CHF 0.10/call
-bank with 3 accounts (120 / 40 / 20 expected TX) and a 3-month history load:
-
-With **account list refresh = Daily** (as in the original discussion):
+Set **Days per month = 31**, **account list refresh = Daily**, and **page size = 25** for a
+CHF 0.10/call bank with 3 accounts (120 / 40 / 20 expected TX) and a 3-month history load:
 
 | Cadence | Recurring / month |
 |---------|-------------------|
@@ -102,11 +110,12 @@ With **account list refresh = Daily** (as in the original discussion):
 | Daily, 0 intraday (1/day) | CHF 21.70 |
 | Weekly | CHF 2.80 |
 
-With the default **weekly** account list refresh, the 4/day case is CHF 74.80.
+These reproduce the recurring figures from the discussion. (The discussion's 285-call
+initial load mixed 31 days/month for recurring with ~30.5 for history; with one consistent
+31-day basis it is 288. This calculator uses a single basis by design.)
 
-Initial load = **281 API calls** at the default 100 TX/page (1 account list + 92×3
-balance-history + 4 TX backfill). At 25 TX/page — the API default used in the original
-discussion — it's **285** (8 TX backfill).
+With the app defaults (30.44 days/month, weekly account list, 100 TX/page) the 4/day case
+is **CHF 73.49** — the same model, on a calendar-accurate basis.
 
 ## Files
 

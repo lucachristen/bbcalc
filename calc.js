@@ -33,18 +33,22 @@ function computePricing(input) {
     accounts,             // number[]  expected TX per account over the load window
     historyMonths,        // how far back to load data initially
     loadBalanceHistory,   // boolean
-    balanceDaysPerMonth,  // days of balance history per month (~30.5)
     txPageSize,           // TXs per call during backfill
   } = input;
 
-  const price = bank.aisPerCall;
+  // Single per-month basis for every conversion (recurring balances + history).
+  const daysPerMonth = input.daysPerMonth || 30.44;
   const N = accounts.length;
+
+  // Prices default to the selected bank's list price but can be overridden.
+  const val = function (v, d) { return (v === undefined || v === null || v === '') ? d : Number(v); };
+  const price = val(input.pricePerCall, bank.aisPerCall);
+  const registrationCost = val(input.registration, bank.registration);
 
   // ── Recurring (per month) ──────────────────────────────────────────────
   // Balances have no pagination: capturing a daily point costs one call per day
   // per account. When enabled, balances are fetched daily regardless of the sync
-  // frequency — the big difference is on a weekly sync (≈31/mo vs ≈4/mo).
-  const daysPerMonth = input.daysPerMonth || 31;
+  // frequency — the big difference is on a weekly sync (daily vs weekly).
   const balanceRunsPerMonth = input.dailyBalanceSync
     ? Math.max(frequency.syncRunsPerMonth, daysPerMonth)
     : frequency.syncRunsPerMonth;
@@ -56,7 +60,7 @@ function computePricing(input) {
   const recurringCost = recurringCalls * price;
 
   // ── One-time (initial load) ────────────────────────────────────────────
-  const historyDays = Math.round(historyMonths * balanceDaysPerMonth);
+  const historyDays = Math.round(historyMonths * daysPerMonth);
   const iAccountList = 1;
   const iBalances = loadBalanceHistory ? historyDays * N : 0;
   const iTransactions = accounts.reduce(
@@ -65,7 +69,6 @@ function computePricing(input) {
   );
   const initialCalls = iAccountList + iBalances + iTransactions;
   const initialApiCost = initialCalls * price;
-  const registrationCost = bank.registration;
   const oneTimeCost = initialApiCost + registrationCost;
 
   // ── Totals ─────────────────────────────────────────────────────────────

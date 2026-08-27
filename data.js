@@ -37,8 +37,12 @@ const BLINK_BANKS = [
  * The monthly multipliers below reproduce the reference figures from the pricing
  * discussion (N = 3, CHF 0.10/call): 77.50 / 21.70 / 2.80 CHF per month.
  */
-const DAYS_PER_MONTH = 31;   // matches the reference calculation
-const WEEKS_PER_MONTH = 4;   // matches the reference calculation
+// One consistent basis for EVERY per-month conversion (daily syncs, account-list
+// refresh, recurring balances, initial balance history). Average calendar month =
+// 365.25 / 12 ≈ 30.44 days, so recurring × 12 correctly represents one real year.
+// Weekly and monthly cadences are derived from this, never hard-coded separately.
+const DAYS_PER_MONTH = 30.44;
+const WEEKS_PER_MONTH = DAYS_PER_MONTH / 7;   // ≈ 4.35
 
 // Two base cadences. For "daily" the number of syncs per day is configurable
 // (1 end-of-day close + N intraday). For "weekly" it's one sync per week.
@@ -49,10 +53,12 @@ const CADENCES = [
 
 // How often the account list is refreshed (1 call per refresh), independent of
 // the balance/TX sync cadence. SIX suggests weekly is sufficient.
+// runsPerMonth is derived from the live "days per month" at compute time (see
+// app.js), so these carry only id/label/hint — no hard-coded monthly counts.
 const ACCOUNT_LIST_REFRESH = [
-  { id: 'daily',   label: 'Daily',   hint: '≈31 / mo', runsPerMonth: DAYS_PER_MONTH },
-  { id: 'weekly',  label: 'Weekly',  hint: '≈4 / mo',  runsPerMonth: WEEKS_PER_MONTH },
-  { id: 'monthly', label: 'Monthly', hint: '1 / mo',   runsPerMonth: 1 },
+  { id: 'daily',   label: 'Daily',   hint: 'every day' },
+  { id: 'weekly',  label: 'Weekly',  hint: 'every week' },
+  { id: 'monthly', label: 'Monthly', hint: 'every month' },
 ];
 
 // Default assumptions (overridable in the "Advanced" section of the UI).
@@ -63,9 +69,9 @@ const DEFAULTS = {
   intradaySyncs: 3,
   // Account list refresh cadence — SIX suggests weekly is enough.
   accountListRefresh: 'weekly',
-  // Balance history has no list API and no pagination: 1 call per day per account.
-  // ~30.5 days/month -> 3 months = 92 balance calls per account (matches reference).
-  balanceDaysPerMonth: 30.5,
+  // Single per-month basis (see DAYS_PER_MONTH) used for all monthly conversions,
+  // including the initial balance-history backfill (1 call per day per account).
+  daysPerMonth: DAYS_PER_MONTH,
   // Transactions returned per API call during the initial backfill.
   // 100 is supported by most banks (the API default is lower).
   txPageSize: 100,

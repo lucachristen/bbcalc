@@ -3,14 +3,18 @@
   'use strict';
 
   var CHF = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
-  var NUM = new Intl.NumberFormat('de-CH');
+  var NUM = new Intl.NumberFormat('de-CH', { maximumFractionDigits: 2 });
   var money = function (n) { return CHF.format(n); };
   var num = function (n) { return NUM.format(n); };
 
   // ── State ──────────────────────────────────────────────────────────────
+  var DEFAULT_BANK = BLINK_BANKS.filter(function (b) { return b.id === 'ubs'; })[0] || BLINK_BANKS[0];
+
   var state = {
     users: 1,
-    bankId: 'ubs',
+    bankId: DEFAULT_BANK.id,
+    pricePerCall: DEFAULT_BANK.aisPerCall,    // editable; bank selection pre-fills it
+    registration: DEFAULT_BANK.registration,  // editable; bank selection pre-fills it
     cadence: DEFAULTS.cadence,          // 'daily' | 'weekly'
     intradaySyncs: DEFAULTS.intradaySyncs,
     accountListRefresh: DEFAULTS.accountListRefresh,  // 'daily' | 'weekly' | 'monthly'
@@ -19,7 +23,7 @@
     loadBalanceHistory: true,
     dailyBalanceSync: false,
     txPageSize: DEFAULTS.txPageSize,
-    balanceDaysPerMonth: DEFAULTS.balanceDaysPerMonth,
+    daysPerMonth: DEFAULTS.daysPerMonth,
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -96,6 +100,16 @@
     });
   }
 
+  // Make the single per-month basis explicit: show what daily/weekly/monthly and
+  // a year work out to for the current value.
+  function updateBasisNote() {
+    var dpm = state.daysPerMonth;
+    $('basis-note').innerHTML =
+      'One basis for every per-month figure: <strong>' + dpm + ' days/month</strong>. ' +
+      'So daily = ' + dpm + '/mo, weekly = ' + (dpm / 7).toFixed(2) + '/mo, monthly = 1/mo, ' +
+      'and a year = ' + Math.round(dpm * 12) + ' days (12 × month).';
+  }
+
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
   function renderAccounts() {
     var box = $('accounts');
@@ -149,25 +163,28 @@
     var b = BLINK_BANKS.filter(function (x) { return x.id === state.bankId; })[0];
     return b || BLINK_BANKS[0];
   }
+  // Runs per month for a given refresh cadence, derived from the live days/month
+  // basis so daily / weekly / monthly are always mutually consistent.
+  function runsPerMonth(cadenceId) {
+    var dpm = state.daysPerMonth;
+    if (cadenceId === 'daily') return dpm;
+    if (cadenceId === 'monthly') return 1;
+    return dpm / 7;   // weekly
+  }
+
   // Build the frequency object the engine expects. Account-list refresh is
   // independent of the balance/TX sync cadence.
   function currentFrequency() {
-    var alr = ACCOUNT_LIST_REFRESH.filter(function (o) { return o.id === state.accountListRefresh; })[0]
-      || ACCOUNT_LIST_REFRESH[1];
     var syncRunsPerMonth = state.cadence === 'weekly'
-      ? WEEKS_PER_MONTH
-      : (1 + Math.max(0, state.intradaySyncs)) * DAYS_PER_MONTH;   // 1 close + intraday
-    return { accountListRunsPerMonth: alr.runsPerMonth, syncRunsPerMonth: syncRunsPerMonth };
+      ? runsPerMonth('weekly')
+      : (1 + Math.max(0, state.intradaySyncs)) * state.daysPerMonth;   // 1 close + intraday
+    return {
+      accountListRunsPerMonth: runsPerMonth(state.accountListRefresh),
+      syncRunsPerMonth: syncRunsPerMonth,
+    };
   }
 
   // ── Render results ─────────────────────────────────────────────────────
-  function bankNote(bank) {
-    var parts = [];
-    parts.push(bank.aisPerCall > 0 ? money(bank.aisPerCall) + ' per API call' : 'no per-call charge');
-    parts.push(bank.registration > 0 ? money(bank.registration) + ' registration' : 'no registration fee');
-    return parts.join(' · ');
-  }
-
   function rowHTML(label, calls, cost) {
     return '<tr><td>' + label + '</td>' +
       '<td class="muted-cell">' + num(calls) + '</td>' +
@@ -177,19 +194,19 @@
   function render() {
     var bank = currentBank();
     var freq = currentFrequency();
-    $('bank-note').textContent = bankNote(bank);
 
     var r = computePricing({
       bank: bank,
       frequency: freq,
+      pricePerCall: state.pricePerCall,
+      registration: state.registration,
       accounts: state.accounts,
       historyMonths: state.historyMonths,
       loadBalanceHistory: state.loadBalanceHistory,
-      balanceDaysPerMonth: state.balanceDaysPerMonth,
       txPageSize: state.txPageSize,
       users: state.users,
       dailyBalanceSync: state.dailyBalanceSync,
-      daysPerMonth: DAYS_PER_MONTH,
+      daysPerMonth: state.daysPerMonth,
     });
 
     var p = r.pricePerCall;
@@ -238,7 +255,25 @@
       state.users = e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1);
       render();
     });
-    $('bank').addEventListener('change', function (e) { state.bankId = e.target.value; render(); });
+    $('bank').addEventListener('change', function (e) {
+      state.bankId = e.target.value;
+      // Pre-fill the editable price fields from the selected bank's list price.
+      var bank = currentBank();
+      state.pricePerCall = bank.aisPerCall;
+      state.registration = bank.registration;
+      $('price-per-call').value = bank.aisPerCall;
+      $('registration').value = bank.registration;
+      render();
+    });
+    var numInput = function (id, key, min) {
+      $(id).addEventListener('input', function (e) {
+        state[key] = e.target.value === '' ? min : Math.max(min, parseFloat(e.target.value));
+        if (isNaN(state[key])) state[key] = min;
+        render();
+      });
+    };
+    numInput('price-per-call', 'pricePerCall', 0);
+    numInput('registration', 'registration', 0);
     $('history').addEventListener('input', function (e) {
       state.historyMonths = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
       render();
@@ -253,8 +288,10 @@
     $('page-size').addEventListener('input', function (e) {
       state.txPageSize = Math.max(1, parseInt(e.target.value, 10) || 1); render();
     });
-    $('balance-days').addEventListener('input', function (e) {
-      state.balanceDaysPerMonth = Math.max(1, parseFloat(e.target.value) || 1); render();
+    $('days-per-month').addEventListener('input', function (e) {
+      state.daysPerMonth = Math.max(1, parseFloat(e.target.value) || 1);
+      updateBasisNote();
+      render();
     });
     $('add-account').addEventListener('click', function () {
       state.accounts.push(20);
@@ -267,6 +304,7 @@
   buildBanks();
   buildFrequencies();
   buildAccountListRefresh();
+  updateBasisNote();
   renderAccounts();
   bind();
   render();

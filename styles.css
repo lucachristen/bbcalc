@@ -106,6 +106,11 @@ select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .with-suffix input { padding-right: 74px; }
 .with-suffix .suffix { position: absolute; right: 12px; color: var(--muted); font-size: .9rem; pointer-events: none; }
 
+/* two inputs side by side (price / registration) */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 460px) { .two-col { grid-template-columns: 1fr; } }
+.two-col label { font-size: .82rem; }
+
 /* ── Segmented control (frequency) ── */
 .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 @media (max-width: 380px) { .segmented { grid-auto-flow: row; } }

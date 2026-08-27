@@ -19,6 +19,15 @@
     <!-- ───────────── Inputs ───────────── -->
     <section class="card inputs" aria-label="Configuration">
       <div class="field">
+        <label for="days-per-month">Days per month (calendar basis)</label>
+        <div class="with-suffix">
+          <input type="number" id="days-per-month" min="1" step="0.01" value="30.44" inputmode="decimal" />
+          <span class="suffix">days</span>
+        </div>
+        <p class="field-note" id="basis-note"></p>
+      </div>
+
+      <div class="field">
         <label for="users">Number of users</label>
         <div class="with-suffix">
           <input type="number" id="users" min="1" step="1" value="1" inputmode="numeric" />
@@ -30,7 +39,23 @@
       <div class="field">
         <label for="bank">Bank</label>
         <select id="bank"></select>
-        <p class="field-note" id="bank-note"></p>
+        <div class="two-col" style="margin-top:10px">
+          <div>
+            <label for="price-per-call">Price per API call</label>
+            <div class="with-suffix">
+              <input type="number" id="price-per-call" min="0" step="0.01" value="0.10" inputmode="decimal" />
+              <span class="suffix">CHF</span>
+            </div>
+          </div>
+          <div>
+            <label for="registration">Registration (one-time)</label>
+            <div class="with-suffix">
+              <input type="number" id="registration" min="0" step="0.01" value="20" inputmode="decimal" />
+              <span class="suffix">CHF</span>
+            </div>
+          </div>
+        </div>
+        <p class="field-note">Prefilled from the SIX price list for the selected bank — edit to model negotiated or volume rates.</p>
       </div>
 
       <div class="field">
@@ -51,7 +76,7 @@
             <input type="checkbox" id="daily-balance" />
             <span>Capture a balance for every day</span>
           </label>
-          <p class="field-note">Balances have no pagination — one call per day per account. On a weekly sync, capturing a daily balance point means ~31 calls/account per month instead of ~4.</p>
+          <p class="field-note">Balances have no pagination — one call per day per account. On a weekly sync, capturing a daily balance point means one call per day (~1 month of days) instead of ~4 per month.</p>
         </div>
       </div>
 
@@ -94,13 +119,6 @@
       </label>
       <p class="field-note">Balances have no list API and no pagination — one call per day per account. This is the single biggest cost driver.</p>
 
-      <details class="advanced">
-        <summary>Advanced assumptions</summary>
-        <div class="field inline">
-          <label for="balance-days">Balance days per month</label>
-          <input type="number" id="balance-days" min="1" step="0.5" value="30.5" />
-        </div>
-      </details>
     </section>
 
     <!-- ───────────── Results ───────────── -->
