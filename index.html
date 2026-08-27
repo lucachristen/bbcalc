@@ -118,7 +118,7 @@
             <input type="number" id="page-size" min="1" step="1" value="100" inputmode="numeric" />
             <span class="suffix">TX / call</span>
           </div>
-          <p class="field-note">Used for the initial transaction backfill (⌈expected TX ÷ page size⌉ per account). Most banks support 100.</p>
+          <p class="field-note">Each API call fetches up to this many transactions during the initial backfill — so more expected transactions, or a smaller page size, means more calls. Most banks support 100.</p>
         </div>
       </div>
 
@@ -224,7 +224,7 @@
         <ul>
           <li><strong>1</strong> call for the account list</li>
           <li><strong>1</strong> balance call per day per account over the load window <span class="muted">(no pagination)</span></li>
-          <li><strong>⌈TX ÷ page size⌉</strong> transaction calls per account</li>
+          <li>enough <strong>transaction calls</strong> to fetch all expected TXs, one page at a time</li>
           <li>the bank's one-time customer registration fee</li>
         </ul>
       </div>
