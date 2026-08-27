@@ -104,10 +104,11 @@
   // a year work out to for the current value.
   function updateBasisNote() {
     var dpm = state.daysPerMonth;
+    var round2 = function (n) { return Math.round(n * 100) / 100; };
     $('basis-note').innerHTML =
       'One basis for every per-month figure: <strong>' + dpm + ' days/month</strong>. ' +
-      'So daily = ' + dpm + '/mo, weekly = ' + (dpm / 7).toFixed(2) + '/mo, monthly = 1/mo, ' +
-      'and a year = ' + Math.round(dpm * 12) + ' days (12 × month).';
+      'So a daily cadence = ' + dpm + '×/mo, weekly = ' + round2(dpm / 7) + '×/mo, monthly = 1×/mo, ' +
+      'and a year = 12 × ' + dpm + ' = ' + round2(dpm * 12) + ' days.';
   }
 
   // ── Accounts (dynamic) ─────────────────────────────────────────────────
